@@ -7,45 +7,92 @@ namespace EmployeeSerialization
 {
     class Program
     {
+
         static void Main(string[] args)
         {
-            IEnumerable<Employee> employeeList = EmployeeDeserializer();
+            string file = "EmployeeList.json";
+            EmployeeListJsonProvider provider = new EmployeeListJsonProvider(file);
+            List<Employee> employeeList = new List<Employee>();
 
-            int regime;
-
-            string name;
-            string family;
-            string patronymic;
-            string phone;
-            string address;
-            
-            do {
-                Console.WriteLine("Выберете режим: 0 - добавление нового сотрудника, 1 - поиск сотрудников, 2 - выход");
-                regime = Console.Read();
-
-
-
-
-            } while (regime != 2);
-        }
-
-        public static void EmployeeSerializer(IEnumerable<Employee> collection) {
-            using (FileStream fs = new FileStream("Employee.json", FileMode.Create))
+            try
             {
-                JsonSerializer.SerializeAsync(fs, collection);
+                employeeList = provider.Load();
             }
+            catch {}
+            
+            string regime;
+
+            do {
+                Console.WriteLine("\nВыберете режим: 0 - добавление нового сотрудника, 1 - поиск сотрудников. Для выхода нажмите любую клавишу.");
+
+                regime = Console.ReadLine();
+
+                switch (regime) {
+                    case "0":
+                        {
+                            Console.WriteLine("Введите данные нового сотрудника.");
+
+                            if (employeeList is not null)
+                                employeeList.Add(entrance());
+                            break;
+                        }
+                    case "1": 
+                        {
+                            Console.WriteLine("Введите данные сотродника для поиска. Enter - пропуск поля.");
+
+                            Employee employeeToFind = entrance();
+
+                            List<Employee> foundList = employeeList.FindAll(e => searchFunction(e, employeeToFind));
+
+                            Console.WriteLine("\nНайденные сотрудники: ");
+
+                            foreach (Employee e in foundList) {
+                                Console.WriteLine(e.ToString());
+                            }
+                            break;
+                        } 
+                    default:
+                        {
+                            provider.Save(employeeList);
+                            return;
+                        }
+
+                }
+            } while (true);
         }
 
-        public static IEnumerable<Employee> EmployeeDeserializer() {
-            using (FileStream fs = new FileStream("Employee.json", FileMode.Open)) {
-                return JsonSerializer.DeserializeAsync<IEnumerable<Employee>>(fs).Result;
-            }
-                
+        static public Employee entrance() {
+            Employee newEmployee = new Employee();
+            Console.Write("\nИмя: ");
+            newEmployee.FirstName = Console.ReadLine();
+            Console.Write("Фамилия: ");
+            newEmployee.LastName = Console.ReadLine();
+            Console.Write("Отчество: ");
+            newEmployee.Patronymic = Console.ReadLine();
+            Console.Write("Телефон: ");
+            newEmployee.Phone = Console.ReadLine();
+            Console.Write("Адрес: ");
+            newEmployee.Address = Console.ReadLine();
+
+            return newEmployee;
         }
 
-        public 
+        static public bool searchFunction(Employee e1, Employee e2) {
+            if (e2.FirstName == "" && e2.LastName == "" && e2.Patronymic == "" && e2.Phone == "" && e2.Address == "")
+                return false;
 
-        public static void addEmployee() { }
+            for (int i = 0; i < 5; i++) {
+                if (e2[i] != "") {
+                    if (e1[i] == e2[i])
+                        continue;
+                    else {
+                        return false;
+                    }
 
+                }
+            }
+
+            return true;
+        }
     }
 }
